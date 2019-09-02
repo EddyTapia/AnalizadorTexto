@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Main-Class: edu.cecar.analizador.Programa
+Main-Class: edu.cecar.analyzer.Program
