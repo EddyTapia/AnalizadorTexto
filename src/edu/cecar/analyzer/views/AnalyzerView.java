@@ -29,101 +29,112 @@ public final class AnalyzerView {
     }
 
     public void initialize() {
-        HashMap<String, Object> options = validate(args);
+        String path = this.getTextFilePath(args);
+        HashMap<String, Object> options = getOptions(args);
 
-        if (options != null && this.controller != null) {
-            this.controller.analize(options);
+        if (this.controller != null) {
+            this.controller.analize(options, path);
         }
     }
 
-    public void showMessage(String[] message) {
+    public void showInfo(String[] message) {
         for (String line : message) {
             System.out.println(line);
         }
     }
 
-    private HashMap<String, Object> validate(String[] args) {
-        if (args.length == 0) {
-            System.out.println("Se requiere un argumento.");
-            return null;
+    public void exitWithError(String error) {
+        System.err.println(error);
+        System.exit(1);
+    }
+    
+    private String getTextFilePath(String[] args) {
+
+        if (args == null || args.length == 0) {
+            this.exitWithError("No se especificó ninguna ruta de achivo.");
         }
 
         // Obtener el path
         String path = args[args.length - 1].trim();
-
         if (!path.endsWith(".txt")) {
-            System.out.println("El nombre del archivo de texto no es válido.");
-            return null;
+            this.exitWithError("El nombre del archivo de texto no es válido.");      
         }
 
+        return path;
+    }
+
+    private HashMap<String, Object> getOptions(String[] args) {
         HashMap<String, Object> options = new HashMap<String, Object>();
+
         // Si es mayor que 1 es porque tiene opciones
         if (args.length > 1) {
-            String[] optionsAndTheirArgs = Arrays.copyOfRange(args, 0, args.length - 1);
+            String[] input = Arrays.copyOfRange(args, 0, args.length - 1);
 
             String bufferedOption = null;
-            for (int i = 0; i < optionsAndTheirArgs.length; i++) {
-
-                String currentOptionOrArg = optionsAndTheirArgs[i];
+            for (int i = 0; i < input.length; i++) {
+                String currentInput = input[i].trim();
 
                 // Prevenir la repetición de opciones
-                if (options.containsKey(currentOptionOrArg)) {
-                    System.out.println("Las opciones no se deben repetir.");
-                    return null;
+                if (options.containsKey(currentInput)) {
+                    this.exitWithError("Las opciones no se deben repetir.");                
                 }
 
                 // Prevenir opciones mutuamente exclusivas
-                if (currentOptionOrArg == MOST_LONG_LINE && options.containsKey(MOST_SHORT_LINE) ||
-                    currentOptionOrArg == MOST_SHORT_LINE && options.containsKey(MOST_LONG_LINE)) {
-                    System.out.println("La opciones -l y -s son mutuamente exclusivas.");
-                    return null;
+                if (currentInput.equals(MOST_LONG_LINE) && options.containsKey(MOST_SHORT_LINE) ||
+                    currentInput.equals(MOST_SHORT_LINE) && options.containsKey(MOST_LONG_LINE)) {
+                    this.exitWithError("La opciones -l y -s son mutuamente exclusivas.");              
                 }
 
-                // Asegurar que se trate de una opcion disponible
-                if (!Arrays.asList(AVAILABLE_OPTIONS).contains(currentOptionOrArg)) {
+                if (!Arrays.asList(AVAILABLE_OPTIONS).contains(currentInput)) {
 
                     if (bufferedOption == null) {
-                        System.out.println("La option " + currentOptionOrArg + " no está disponible.");
-                        return null;
+                        this.exitWithError("La option " + currentInput + " no está disponible.");
                     }
-
-                    Object arg = null;
 
                     // Se trata de un argumento de una opción
-                    if (currentOptionOrArg != QUANTITY) {
+                    Object arg = currentInput;
+                    if (!currentInput.equals(QUANTITY)) {
+
                         // Asegurarse de que el argumento sea entero.
-                        if (currentOptionOrArg.contains(".")) {
-                            System.out.println("El argumento de la opción " + bufferedOption + " debe ser entero.");
-                            return null;
+                        if (currentInput.contains(".")) {
+                            this.exitWithError("El argumento de la opción " + bufferedOption + " debe ser entero.");
                         }
+
                         try {
-                            arg = Integer.parseInt(currentOptionOrArg);
+                            arg = Integer.parseInt(currentInput);
                         } catch(NumberFormatException e) {
-                            System.out.println("Tipo no válido para la opción " + bufferedOption);
-                            return null;
+                            this.exitWithError("Tipo no válido para la opción " + bufferedOption);
                         }
-                    } else {
-                        // El argumento de la opción -c no debe comenzar un guión medio
-                        // ya que la cadena no se encierra entre comillas y sería ambigua
-                        // porque podría tratarse de una opción, independientemente de que
-                        // actualmente esté disponible o no, pues, en el futuro podría estarlo.
-                        if (currentOptionOrArg.startsWith("-")) {
-                            System.out.println("La opción " + currentOptionOrArg + " no está disponible.");
-                            return null;
-                        }
-                        arg = currentOptionOrArg;
+
                     }
-                    options.replace(bufferedOption, arg);
+
+                    if (currentInput.equals(MOST_COMMON_WORD)) {
+                        options.replace(bufferedOption, arg);
+                    } else {
+                        options.put(bufferedOption, arg);
+                    }
+
                     bufferedOption = null;
                     continue;
+                } 
+                
+                if (bufferedOption != null && 
+                   (bufferedOption.equals(MOST_LONG_LINE) || bufferedOption.equals(MOST_SHORT_LINE))) {
+                    this.exitWithError("La opción " + bufferedOption + " requiere un argumento.");
                 }
 
-                options.put(currentOptionOrArg, null);
-                bufferedOption = currentOptionOrArg;
+                if (currentInput.equals(MOST_COMMON_WORD)) {
+                    options.put(currentInput, null);
+                } 
+                bufferedOption = currentInput;
+
+                // Si es la última opción y es -l ó -s debe fallar (faltaría el argumento requirido)
+                if (i == input.length -1 && 
+                   (currentInput.equals(MOST_LONG_LINE) || currentInput.equals(MOST_SHORT_LINE))) {
+                    this.exitWithError("La opción " + currentInput + " requiere un argumento.");
+                }
             }
         }
-
-        options.put("-path", path);
 
         return options;
     }

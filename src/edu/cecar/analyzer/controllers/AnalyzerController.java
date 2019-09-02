@@ -14,7 +14,7 @@ public final class AnalyzerController {
         this.view.initialize();
     }
 
-    public void analize(HashMap<String, Object> options) {
+    public void analize(HashMap<String, Object> options, String path) {
         
     }
 }
