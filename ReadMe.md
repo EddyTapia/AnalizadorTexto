@@ -2,6 +2,10 @@
 
 Primer trabajo para la clase de Análisis y Diseño II.
 
+# Integrantes
+Rafael Guillermo Avila Llorente
+Eddy José Tapia Salcedo
+
 # Compilación
 
 Desde el directorio raíz de la aplicación:
