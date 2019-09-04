@@ -4,8 +4,9 @@ Primer trabajo para la clase de Análisis y Diseño II.
 
 # Integrantes
 
->Rafael Guillermo Avila Llorente
->Eddy José Tapia Salcedo
+Rafael Guillermo Avila Llorente
+
+Eddy José Tapia Salcedo
 
 # Compilación
 
